@@ -11,7 +11,7 @@ typealias Background = EmojiArtModel.Background
 typealias Emoji = EmojiArtModel.Emoji
 
 struct EmojiArtModel {
-    let background = Background.blank
+    var background = Background.blank
     var emojies = [Emoji]()
     
     struct Emoji: Identifiable {
