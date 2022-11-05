@@ -178,6 +178,9 @@ extension CGSize {
     static func /(lhs: Self, rhs: CGFloat) -> CGSize {
         CGSize(width: lhs.width/rhs, height: lhs.height/rhs)
     }
+    static func +=(lhs: inout Self, rhs: Self) {
+        lhs = lhs + rhs
+    }
 }
 
 // add RawRepresentable protocol conformance to CGSize and CGFloat

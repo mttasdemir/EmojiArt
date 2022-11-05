@@ -31,21 +31,41 @@ class EmojiArtDocument: ObservableObject {
         case .blank: break
         case .url(let url):
             backgroundImageFetchStatus = .fetching
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                let data = try? Data(contentsOf: url)
-                if Background.url(url) == self?.emojiArtModel.background {
-                    DispatchQueue.main.async {
-                        self?.backgroundImage = UIImage(data: data!)
-                        self?.backgroundImageFetchStatus = .idle
-                    }
-                }
+            Task {
+                await downloadBackgroundImageFromUrl(url)
             }
+
+//            backgroundImageFetchStatus = .fetching
+//            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+//                let data = try? Data(contentsOf: url)
+//                if Background.url(url) == self?.emojiArtModel.background {
+//                    DispatchQueue.main.async {
+//                        self?.backgroundImage = UIImage(data: data!)
+//                        self?.backgroundImageFetchStatus = .idle
+//                    }
+//                }
+//            }
 
         case .imageData(let data):
             backgroundImageFetchStatus = .fetching
             backgroundImage = UIImage(data: data)
             backgroundImageFetchStatus = .idle
         }
+    }
+    
+    private func downloadBackgroundImageFromUrl(_ url: URL) async {
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            if (response as? HTTPURLResponse)?.statusCode == 200 {
+                DispatchQueue.main.async { [weak self] in
+                    if Background.url(url) == self?.emojiArtModel.background {
+                        self?.backgroundImage = UIImage(data: data)
+                        self?.backgroundImageFetchStatus = .idle
+                    }
+                }
+            }
+        }
+        catch { }
     }
     
     var emojies: [Emoji] {

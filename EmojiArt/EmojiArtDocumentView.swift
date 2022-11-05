@@ -24,21 +24,78 @@ struct EmojiArtDocumentView: View {
             ZStack(alignment: .center) {
                 Color.white
                 UIImageView(image: document.backgroundImage)
+                    .scaleEffect(magnificationFactor)
                     .position(convertFromRelativeCoordinate(from: (0, 0), in: geometry))
+                    .gesture(tapToScale(in: geometry.size))
                 if document.backgroundImageFetchStatus == .fetching {
                     ProgressView().scaleEffect(4.0)
                 } else {
                     ForEach(document.emojies) { emoji in
                         Text(emoji.image)
                             .font(.system(size: CGFloat(emoji.size)))
+                            .scaleEffect(magnificationFactor)
                             .position(position(of: emoji, in: geometry))
                     }
                 }
             }
+            .clipped()
+            .gesture(drag().simultaneously(with: zoomByPinching()))
             .onDrop(of: [.plainText, .url, .image], isTargeted: nil) { providers, location in
                 return handleDroppedObject(providers, location, in: geometry)
             }
         }
+    }
+    
+    // MARK: - Gestures
+    @State var scalingFactor: CGFloat = 1
+    private func tapToScale(in size: CGSize) -> some Gesture {
+        TapGesture(count: 2)
+            .onEnded {
+                withAnimation(.linear(duration: 1.0)) {
+                    scalingFactor = scalingFactor == 1 ? zoomToScale(document.backgroundImage, size) : 1
+                    updatingOffsetSize = CGSize.zero
+                }
+            }
+    }
+    
+    @GestureState var magnification: CGFloat = 1.0
+    private func zoomByPinching() -> some Gesture {
+        MagnificationGesture(minimumScaleDelta: 0.1)
+            .updating($magnification) { currentState, gestureState, _ in
+                gestureState = currentState
+            }
+            .onEnded { value in
+                scalingFactor *= value
+            }
+    }
+    
+    private var magnificationFactor: CGFloat {
+        scalingFactor * magnification
+    }
+    
+    @State private var updatingOffsetSize = CGSize.zero
+    @GestureState var draggedSize: CGSize = CGSize.zero
+    private func drag() -> some Gesture {
+        DragGesture()
+            .updating($draggedSize) { currentState, gestureState, _ in
+                gestureState = currentState.translation
+            }
+            .onEnded { value in
+                updatingOffsetSize += value.translation
+            }
+    }
+    
+    private var offsetSize: CGSize {
+        updatingOffsetSize + draggedSize
+    }
+    //MARK: - Functions
+    private func zoomToScale(_ image: UIImage?, _ size: CGSize) -> CGFloat {
+        if let image {
+            let zoomHorizantol = size.width / image.size.width
+            let zoomVertical = size.height / image.size.height
+            return min(zoomHorizantol, zoomVertical)
+        }
+        return 1.0;
     }
     
     private func handleDroppedObject(_ providers: [NSItemProvider], _ location: CGPoint, in geometry: GeometryProxy) -> Bool {
@@ -48,6 +105,7 @@ struct EmojiArtDocumentView: View {
             if let url = url as? URL {
                 loaded = true
                 document.setBackground(url)
+                scalingFactor = 1
             }
         }
         
@@ -56,6 +114,7 @@ struct EmojiArtDocumentView: View {
                 if let data = image?.jpegData(compressionQuality: 1.0){
                     loaded = true
                     document.setBackground(data)
+                    scalingFactor = 1
                 }
             }
         }
@@ -86,8 +145,8 @@ struct EmojiArtDocumentView: View {
     
     private func relativePosition(of point: CGPoint, in geometry: GeometryProxy) -> (Int, Int) {
         let center = geometry.frame(in: .local).center
-        return (x: Int(point.x - center.x),
-                y: Int(point.y - center.y))
+        return (x: Int((point.x - offsetSize.width - center.x) / scalingFactor),
+                y: Int((point.y - offsetSize.height - center.y) / scalingFactor))
     }
     
     private func position(of emoji: Emoji, in geometry: GeometryProxy) -> CGPoint {
@@ -96,8 +155,8 @@ struct EmojiArtDocumentView: View {
     
     private func convertFromRelativeCoordinate(from coordinate: (x: Int, y: Int), in geometry: GeometryProxy) -> CGPoint {
         let center = geometry.frame(in: .local).center
-        return CGPoint(x: center.x + CGFloat(coordinate.x),
-                       y: center.y + CGFloat(coordinate.y))
+        return CGPoint(x: center.x + CGFloat(coordinate.x)*magnificationFactor + offsetSize.width,
+                       y: center.y + CGFloat(coordinate.y)*magnificationFactor + offsetSize.height)
     }
     
     var palette: some View {
@@ -135,8 +194,6 @@ struct UIImageView: View {
     var body: some View {
         if let image {
             Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
         }
     }
 }
