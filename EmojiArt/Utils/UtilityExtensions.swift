@@ -255,3 +255,14 @@ extension Array where Element == NSItemProvider {
         loadObjects(ofType: theType, firstOnly: true, using: load)
     }
 }
+
+
+extension Set where Element: Identifiable {
+    mutating func toggleMatching(of element: Element) {
+        if let index = firstIndex(where: {$0.id == element.id}) {
+            remove(at: index)
+        } else {
+            insert(element)
+        }
+    }
+}

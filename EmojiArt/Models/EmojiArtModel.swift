@@ -14,14 +14,14 @@ struct EmojiArtModel {
     var background = Background.blank
     var emojies = [Emoji]()
     
-    struct Emoji: Identifiable {
+    struct Emoji: Identifiable, Hashable{
         let image: String
-        let x: Int
-        let y: Int
-        let size: Int
+        var x: Int
+        var y: Int
+        var size: CGFloat
         let id: Int
         
-        fileprivate init(image: String, x: Int, y: Int, size: Int, id: Int) {
+        fileprivate init(image: String, x: Int, y: Int, size: CGFloat, id: Int) {
             self.image = image
             self.x = x
             self.y = y
@@ -32,7 +32,7 @@ struct EmojiArtModel {
     }
     
     var emojiIdentifier = 0
-    mutating func addEmoji(_ image: String, at location: (x: Int, y: Int), size: Int) {
+    mutating func addEmoji(_ image: String, at location: (x: Int, y: Int), size: CGFloat) {
         emojiIdentifier += 1
         emojies.append(Emoji(image: image, x: location.x, y: location.y, size: size, id: emojiIdentifier))
     }

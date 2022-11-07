@@ -77,7 +77,7 @@ class EmojiArtDocument: ObservableObject {
     }
     
     // MARK: - intents
-    func addEmoji(_ emoji: String, at location: (Int, Int), size: Int) {
+    func addEmoji(_ emoji: String, at location: (Int, Int), size: CGFloat) {
         emojiArtModel.addEmoji(emoji, at: location, size: size)
     }
     
@@ -86,6 +86,17 @@ class EmojiArtDocument: ObservableObject {
     }
     func setBackground(_ data: Data) {
         emojiArtModel.background = Background.imageData(data)
+    }
+    func updateSize(of emoji: Emoji, by factor: CGFloat) {
+        if let index = emojiArtModel.emojies.index(matching: emoji) {
+            emojiArtModel.emojies[index].size *= factor
+        }
+    }
+    func updatePosition(of emoji: Emoji, by offset: CGSize) {
+        if let index = emojiArtModel.emojies.index(matching: emoji) {
+            emojiArtModel.emojies[index].x += Int(offset.width)
+            emojiArtModel.emojies[index].y += Int(offset.height)
+        }
     }
 }
 

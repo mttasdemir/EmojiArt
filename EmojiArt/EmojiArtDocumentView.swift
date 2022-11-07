@@ -10,7 +10,7 @@ import SwiftUI
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
     let defaultEmojiSize: CGFloat = 100
-    
+    @State private var selectedEmojis: Set<Emoji> = []
     var body: some View {
         VStack {
             documentBody
@@ -33,7 +33,17 @@ struct EmojiArtDocumentView: View {
                     ForEach(document.emojies) { emoji in
                         Text(emoji.image)
                             .font(.system(size: CGFloat(emoji.size)))
-                            .scaleEffect(magnificationFactor)
+                            .scaleEffect(isEmojiSelected(emoji) ? emojiMagnificationFactor : magnificationFactor)
+                            .onTapGesture(count: 1) {
+                                selectedEmojis.toggleMatching(of: emoji)
+                            }
+                            .overlay {
+                                if isEmojiSelected(emoji) {
+                                    Rectangle()
+                                    .strokeBorder(lineWidth: 2)
+                                    .frame(width: CGFloat(emoji.size)*magnificationFactor, height: CGFloat(emoji.size)*magnificationFactor, alignment: .center)
+                                }
+                            }
                             .position(position(of: emoji, in: geometry))
                     }
                 }
@@ -46,8 +56,18 @@ struct EmojiArtDocumentView: View {
         }
     }
     
+    private func isEmojiSelected(_ emoji: Emoji) -> Bool {
+        selectedEmojis.contains(where: {$0.id == emoji.id}) 
+    }
+    
+    private func zoomOnlyEmoji() -> Bool {
+        !selectedEmojis.isEmpty
+    }
+    
     // MARK: - Gestures
-    @State var scalingFactor: CGFloat = 1
+    
+    @State private var scalingFactor: CGFloat = 1
+    @State private var emojiScalingFactor: CGFloat = 1
     private func tapToScale(in size: CGSize) -> some Gesture {
         TapGesture(count: 2)
             .onEnded {
@@ -60,20 +80,32 @@ struct EmojiArtDocumentView: View {
     
     @GestureState var magnification: CGFloat = 1.0
     private func zoomByPinching() -> some Gesture {
-        MagnificationGesture(minimumScaleDelta: 0.1)
+        MagnificationGesture()
             .updating($magnification) { currentState, gestureState, _ in
                 gestureState = currentState
             }
             .onEnded { value in
-                scalingFactor *= value
+                if !zoomOnlyEmoji() {
+                    scalingFactor *= value
+                } else {
+                    updateSelectedEmojisSize(by: emojiScalingFactor * value)
+                }
             }
     }
     
     private var magnificationFactor: CGFloat {
-        scalingFactor * magnification
+        if zoomOnlyEmoji() {
+            return scalingFactor
+        } else {
+            return scalingFactor * magnification
+        }
+    }
+    private var emojiMagnificationFactor: CGFloat {
+        emojiScalingFactor * scalingFactor * magnification
     }
     
     @State private var updatingOffsetSize = CGSize.zero
+    @State private var updatingEmojiOffsetSize = CGSize.zero
     @GestureState var draggedSize: CGSize = CGSize.zero
     private func drag() -> some Gesture {
         DragGesture()
@@ -81,14 +113,42 @@ struct EmojiArtDocumentView: View {
                 gestureState = currentState.translation
             }
             .onEnded { value in
-                updatingOffsetSize += value.translation
+                if !zoomOnlyEmoji() {
+                    updatingOffsetSize += value.translation
+                } else {
+                    updateSelectedEmojiPosition(by: updatingEmojiOffsetSize + value.translation)
+                }
             }
     }
     
     private var offsetSize: CGSize {
-        updatingOffsetSize + draggedSize
+        if zoomOnlyEmoji() {
+            return updatingOffsetSize
+        } else {
+            return updatingOffsetSize + draggedSize
+        }
     }
+    
+    private var emojiOffsetSize: CGSize {
+        updatingEmojiOffsetSize + draggedSize
+    }
+    
     //MARK: - Functions
+    
+    private func updateSelectedEmojiPosition(by offset: CGSize) {
+        selectedEmojis.forEach {
+            document.updatePosition(of: $0, by: offset)
+        }
+        updatingEmojiOffsetSize = CGSize.zero
+    }
+    
+    private func updateSelectedEmojisSize(by factor: CGFloat) {
+        selectedEmojis.forEach {
+            document.updateSize(of: $0, by: factor)
+        }
+        emojiScalingFactor = 1
+    }
+
     private func zoomToScale(_ image: UIImage?, _ size: CGSize) -> CGFloat {
         if let image {
             let zoomHorizantol = size.width / image.size.width
@@ -123,7 +183,7 @@ struct EmojiArtDocumentView: View {
             loadObject(typeof: NSString.self, providers: providers) { emoji in
                 if let emoji = emoji as? String {
                     loaded = true
-                    document.addEmoji(emoji, at: relativePosition(of: location, in: geometry), size: Int(defaultEmojiSize))
+                    document.addEmoji(emoji, at: relativePosition(of: location, in: geometry), size: defaultEmojiSize)
                 }
             }
         }
@@ -145,12 +205,16 @@ struct EmojiArtDocumentView: View {
     
     private func relativePosition(of point: CGPoint, in geometry: GeometryProxy) -> (Int, Int) {
         let center = geometry.frame(in: .local).center
-        return (x: Int((point.x - offsetSize.width - center.x) / scalingFactor),
-                y: Int((point.y - offsetSize.height - center.y) / scalingFactor))
+        return (x: Int((point.x - offsetSize.width - center.x) / magnificationFactor),
+                y: Int((point.y - offsetSize.height - center.y) / magnificationFactor))
     }
     
     private func position(of emoji: Emoji, in geometry: GeometryProxy) -> CGPoint {
-        convertFromRelativeCoordinate(from: (emoji.x, emoji.y), in: geometry)
+        if isEmojiSelected(emoji) {
+            return convertFromRelativeCoordinate(from: (emoji.x + Int(emojiOffsetSize.width), emoji.y + Int(emojiOffsetSize.height)), in: geometry)
+        } else {
+            return convertFromRelativeCoordinate(from: (emoji.x, emoji.y), in: geometry)
+        }
     }
     
     private func convertFromRelativeCoordinate(from coordinate: (x: Int, y: Int), in geometry: GeometryProxy) -> CGPoint {
