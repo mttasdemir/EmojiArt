@@ -12,9 +12,52 @@ class EmojiArtDocument: ObservableObject {
 
     @Published var emojiArtModel: EmojiArtModel = EmojiArtModel() {
         didSet {
+            if autoSaveTimer == nil {
+                scheduledAutoSave()
+            }
             if emojiArtModel.background != oldValue.background {
                 updateBackgroundImage()
             }
+        }
+    }
+    
+    private var autoSaveTimer: Timer?
+    private func scheduledAutoSave() {
+        autoSaveTimer = Timer.scheduledTimer(withTimeInterval: AutoSave.autosaveInterval, repeats: false) { _ in
+            self.autosave()
+            self.autoSaveTimer = nil
+        }
+    }
+    
+    private struct AutoSave {
+        static let autosaveInterval = 10.0
+        static let autosaveFileName = "EmojiArt.json"
+        
+        static var autoSaveUrl: URL? {
+            if let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+                return url.appending(path: autosaveFileName)
+            } else {
+                return nil
+            }
+        }
+    }
+    
+    private func autosave() {
+        if let url = AutoSave.autoSaveUrl {
+            save(to: url)
+        }
+    }
+    
+    private func save(to url: URL) {
+        let thisFunction = "\(String(describing: self)).\(#function)"
+        do {
+            let data: Data = try emojiArtModel.json()
+            try data.write(to: url)
+            print("\(thisFunction) Saved successfully")
+        } catch let encodingError where encodingError is EncodingError {
+            print("\(thisFunction) couldn't encode EmojiArtModel as JSON because \(encodingError.localizedDescription)")
+        } catch {
+            print("\(thisFunction) has error: \(error)")
         }
     }
     
@@ -73,7 +116,11 @@ class EmojiArtDocument: ObservableObject {
     }
     
     init() {
-        emojiArtModel.addEmoji("🛩", at: (-300, -150), size: 200)
+        if let url = AutoSave.autoSaveUrl, let emojiArt = try? EmojiArtModel(url: url) {
+            self.emojiArtModel = emojiArt
+        } else {
+            emojiArtModel.addEmoji("🛩", at: (-300, -150), size: 200)
+        }
     }
     
     // MARK: - intents
