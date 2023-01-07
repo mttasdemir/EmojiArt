@@ -53,7 +53,7 @@ class EmojiArtDocument: ObservableObject {
         do {
             let data: Data = try emojiArtModel.json()
             try data.write(to: url)
-            print("\(thisFunction) Saved successfully")
+            //print("\(thisFunction) Saved successfully")
         } catch let encodingError where encodingError is EncodingError {
             print("\(thisFunction) couldn't encode EmojiArtModel as JSON because \(encodingError.localizedDescription)")
         } catch {
@@ -64,9 +64,10 @@ class EmojiArtDocument: ObservableObject {
     @Published var backgroundImage: UIImage?
     @Published var backgroundImageFetchStatus = FetchStatus.idle
     
-    enum FetchStatus {
+    enum FetchStatus: Equatable {
         case idle
         case fetching
+        case fail(URL)
     }
     
     private func updateBackgroundImage() {
@@ -104,6 +105,9 @@ class EmojiArtDocument: ObservableObject {
                     if Background.url(url) == self?.emojiArtModel.background {
                         self?.backgroundImage = UIImage(data: data)
                         self?.backgroundImageFetchStatus = .idle
+                    } else {
+                        self?.backgroundImageFetchStatus = .fail(url)
+                        self?.backgroundImage = nil
                     }
                 }
             }

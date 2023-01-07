@@ -9,14 +9,17 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
-    let defaultEmojiSize: CGFloat = 100
+    let defaultEmojiSize: CGFloat = 50
     @State private var selectedEmojis: Set<Emoji> = []
+    
+    @State private var isDownloadFailed: Bool = false
+    @State private var downloadUrl: URL?
+    
     var body: some View {
         VStack {
             documentBody
-            palette
+            PaletteChooserView(defaultEmojiSize: defaultEmojiSize)
         }
-        .padding()
     }
     
     var documentBody: some View {
@@ -52,6 +55,21 @@ struct EmojiArtDocumentView: View {
             .gesture(drag().simultaneously(with: zoomByPinching()))
             .onDrop(of: [.plainText, .url, .image], isTargeted: nil) { providers, location in
                 return handleDroppedObject(providers, location, in: geometry)
+            }
+            .onChange(of: document.backgroundImageFetchStatus) { status in
+                switch status {
+                case .fail(let url):
+                        isDownloadFailed = true
+                        downloadUrl = url
+                default: break
+                }
+            }
+            .alert("Download Error", isPresented: $isDownloadFailed, presenting: downloadUrl) { _ in
+                Button("OK") {
+                    isDownloadFailed = false
+                }
+            } message: {url in
+                Text("Error while downloading from \(url)")
             }
         }
     }
@@ -223,34 +241,7 @@ struct EmojiArtDocumentView: View {
                        y: center.y + CGFloat(coordinate.y)*magnificationFactor + offsetSize.height)
     }
     
-    var palette: some View {
-        ScrollingEmojiesView(emojies: testEmojies)
-            .font(.system(size: defaultEmojiSize))
-            .background(Color.green)
-    }
-    
-    let testEmojies = "😀😛🫡🤫🤔🐶🦄🐏🦃🦚🍓🍅🍺🚗🚕🚙🚌🚎🏎🚓🚑🚒🚐🛻🚚🚛🚜🛵🏍🛺🚔🚖🚠🚟✈️🛫🛩🛶🚁"
-    
 }
-
-struct ScrollingEmojiesView: View {
-    let emojies: String
-    
-    var body: some View {
-        ScrollView(.horizontal) {
-            HStack {
-                ForEach(emojies.map{String($0)}, id: \.self) { emoji in
-                    Text(emoji)
-                        .onDrag {
-                            NSItemProvider(object: emoji as NSString)
-                        }
-                }
-            }
-        }
-    }
-}
-
-
 
 struct UIImageView: View {
     let image: UIImage?
@@ -258,6 +249,8 @@ struct UIImageView: View {
     var body: some View {
         if let image {
             Image(uiImage: image)
+        } else {
+            EmptyView()
         }
     }
 }

@@ -63,3 +63,25 @@ struct IdentifiableAlert: Identifiable {
     var id: String
     var alert: () -> Alert
 }
+
+
+struct AnimatedButton: View {
+    let title: String
+    var icon: String?
+    let action: () -> Void
+    
+    var body: some View {
+        Button {
+            withAnimation {
+                action()
+            }
+        } label: {
+            if let icon {
+                Label(title, systemImage: icon)
+            } else {
+                Text(title)
+            }
+        }
+    }
+    
+}

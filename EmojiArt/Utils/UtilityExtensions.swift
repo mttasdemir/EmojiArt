@@ -34,28 +34,28 @@ extension Collection where Element: Identifiable {
 // (even vars on that Published var or subscripts on that var)
 // (or subscripts on vars on that var, etc.)
 
-extension RangeReplaceableCollection where Element: Identifiable {
-    mutating func remove(_ element: Element) {
-        if let index = index(matching: element) {
-            remove(at: index)
-        }
-    }
-
-    subscript(_ element: Element) -> Element {
-        get {
-            if let index = index(matching: element) {
-                return self[index]
-            } else {
-                return element
-            }
-        }
-        set {
-            if let index = index(matching: element) {
-                replaceSubrange(index...index, with: [newValue])
-            }
-        }
-    }
-}
+//extension RangeReplaceableCollection where Element: Identifiable {
+//    mutating func remove(_ element: Element) {
+//        if let index = index(matching: element) {
+//            remove(at: index)
+//        }
+//    }
+//
+//    subscript(_ element: Element) -> Element {
+//        get {
+//            if let index = index(matching: element) {
+//                return self[index]
+//            } else {
+//                return element
+//            }
+//        }
+//        set {
+//            if let index = index(matching: element) {
+//                replaceSubrange(index...index, with: [newValue])
+//            }
+//        }
+//    }
+//}
 
 // if you use a Set to represent the selection of emoji in HW5
 // then you might find this syntactic sugar function to be of use
@@ -263,6 +263,36 @@ extension Set where Element: Identifiable {
             remove(at: index)
         } else {
             insert(element)
+        }
+    }
+}
+
+extension String {
+    func removeDuplication() -> String {
+        var result = ""
+        for chr in self {
+            if !result.contains(chr) {
+                result.append(chr)
+            }
+        }
+        return result
+    }
+}
+
+extension RangeReplaceableCollection where Element: Identifiable {
+    func indexOf(matching element: Element) -> Self.Index? {
+        firstIndex { $0.id == element.id }
+    }
+    
+    subscript(element: Element) -> Element {
+        get {
+            first { $0.id == element.id }!
+        }
+        
+        set {
+            if let index = indexOf(matching: element) {
+                self.replaceSubrange(index...index, with: [newValue])
+            }
         }
     }
 }

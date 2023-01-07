@@ -7,8 +7,8 @@
 
 import Foundation
 
-struct Palette: Identifiable, Codable {
-    let name: String
+struct Palette: Identifiable, Codable, Hashable {
+    var name: String
     var emojis: String
     let id: Int
 }
