@@ -5,8 +5,8 @@
 //  Created by Mustafa Taşdemir on 23.10.2022.
 //
 
-import Foundation
 import SwiftUI
+import Combine
 
 class EmojiArtDocument: ObservableObject {
 
@@ -63,7 +63,7 @@ class EmojiArtDocument: ObservableObject {
     
     @Published var backgroundImage: UIImage?
     @Published var backgroundImageFetchStatus = FetchStatus.idle
-    
+    private var imageDownloadSubscription: AnyCancellable?
     enum FetchStatus: Equatable {
         case idle
         case fetching
@@ -74,11 +74,26 @@ class EmojiArtDocument: ObservableObject {
         switch emojiArtModel.background {
         case .blank: break
         case .url(let url):
+            imageDownloadSubscription?.cancel()
             backgroundImageFetchStatus = .fetching
-            Task {
-                await downloadBackgroundImageFromUrl(url)
-            }
+            
+            let urlSession = URLSession.shared
+            let publihser = urlSession.dataTaskPublisher(for: url)
+                .map{(data, urlResponse) in UIImage(data: data) }
+                .replaceError(with: nil)
+                .receive(on: DispatchQueue.main)
+            
+            imageDownloadSubscription = publihser
+                .sink { [weak self] image in
+                    self?.backgroundImage = image
+                    self?.backgroundImageFetchStatus = .idle
+                }
+            
+//            Task {
+//                await downloadBackgroundImageFromUrl(url)
+//            }
 
+            
 //            backgroundImageFetchStatus = .fetching
 //            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
 //                let data = try? Data(contentsOf: url)
@@ -120,6 +135,8 @@ class EmojiArtDocument: ObservableObject {
     }
     
     init() {
+        //emojiArtModel.addEmoji("🛩", at: (-300, -150), size: 200)
+
         if let url = AutoSave.autoSaveUrl, let emojiArt = try? EmojiArtModel(url: url) {
             self.emojiArtModel = emojiArt
         } else {

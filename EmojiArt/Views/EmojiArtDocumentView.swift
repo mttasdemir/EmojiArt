@@ -64,6 +64,9 @@ struct EmojiArtDocumentView: View {
                 default: break
                 }
             }
+            .onReceive(document.$backgroundImage) { image in
+               scalingFactor = zoomToScale(image, geometry.size)
+            }
             .alert("Download Error", isPresented: $isDownloadFailed, presenting: downloadUrl) { _ in
                 Button("OK") {
                     isDownloadFailed = false
