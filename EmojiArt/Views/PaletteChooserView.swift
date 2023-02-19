@@ -27,16 +27,17 @@ struct PaletteChooserView: View {
 
     }
     
-    func body(for palette: Palette) -> some View {
+    func body(for paletteToShow: Palette) -> some View {
         HStack {
-            Text(palette.name)
-            ScrollingEmojiesView(emojies: palette.emojis)
+            Text(paletteToShow.name)
+            ScrollingEmojiesView(emojies: paletteToShow.emojis)
                 .background(Color.green)
         }
-        .id(palette.id)
+        .id(paletteToShow.id)
         .transition(AnyTransition.asymmetric(insertion: .offset(x: 0, y: -defaultEmojiSize), removal: .offset(x:0, y: defaultEmojiSize)))
-        .popover(item: $palette) { palette in
-            PaletteEditorView(palette: $paletteStore.palettes[palette], isPopover: true)
+        .popover(item: $palette) { paletteItem in
+            PaletteEditorView(palette: $paletteStore.palettes[paletteItem], isPopover: true)
+                .wrappedInNavigationViewToMakeDismissable(by: { palette = nil })
         }
     }
     

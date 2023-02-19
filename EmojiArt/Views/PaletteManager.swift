@@ -44,14 +44,19 @@ struct PaletteManager: View {
             .environment(\.colorScheme, cs)
             .navigationTitle(Text("Palette Manager"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
-                        if isPresented {
-                            dismiss()
-                        }
-                    }
+            .dismissable {
+                if isPresented {
+                    dismiss()
                 }
+            }
+            .toolbar {
+//                ToolbarItem(placement: .navigationBarLeading) {
+//                    Button("Close") {
+//                        if isPresented {
+//                            dismiss()
+//                        }
+//                    }
+//                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(isEditing == .active ? "Done" : "Edit") {
                         isEditing = isEditing == .active ? .inactive : .active

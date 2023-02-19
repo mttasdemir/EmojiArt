@@ -85,3 +85,51 @@ struct AnimatedButton: View {
     }
     
 }
+
+extension View {
+    @ViewBuilder
+    func wrappedInNavigationViewToMakeDismissable(by dismiss: (() -> Void)?) -> some View {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            NavigationStack {
+                self.dismissable(by: dismiss)
+            }
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func dismissable(by dismiss: (() -> Void)?) -> some View {
+        if UIDevice.current.userInterfaceIdiom == .phone, let dismiss {
+            self.toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close", action: dismiss)
+                }
+            }
+        } else {
+            self
+        }
+    }
+}
+
+extension View {
+    func compactableToolbar(_ content: some View) -> some View {
+        self.toolbar {
+            content.modifier(CompactableToolbar())
+        }
+    }
+}
+
+struct CompactableToolbar: ViewModifier {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    var compact: Bool { horizontalSizeClass == .compact }
+
+    func body(content: Content) -> some View {
+        if compact {
+            Image(systemName: "ellipsis.circle.fill")
+                .contextMenu { content }
+        } else {
+            content
+        }
+    }
+}

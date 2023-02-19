@@ -21,7 +21,10 @@
 		0D2860EB2905941600E42F66 /* EmojiArtDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2860EA2905941600E42F66 /* EmojiArtDocument.swift */; };
 		0D2860EE2905966200E42F66 /* UtilityExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2860ED2905966200E42F66 /* UtilityExtensions.swift */; };
 		0D2860F02905967C00E42F66 /* UtilityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2860EF2905967C00E42F66 /* UtilityViews.swift */; };
+		0D2D139829A1673A007EDC70 /* PhotoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2D139729A1673A007EDC70 /* PhotoGalleryView.swift */; };
+		0D623D0729A12D0F00FE515D /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D623D0629A12D0F00FE515D /* CameraView.swift */; };
 		0DC97463295CE51500358A45 /* PaletteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC97462295CE51500358A45 /* PaletteEditorView.swift */; };
+		0DCF855429A021CA0090B8C2 /* AletMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCF855329A021CA0090B8C2 /* AletMessage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,7 +43,10 @@
 		0D2860EA2905941600E42F66 /* EmojiArtDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiArtDocument.swift; sourceTree = "<group>"; };
 		0D2860ED2905966200E42F66 /* UtilityExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilityExtensions.swift; sourceTree = "<group>"; };
 		0D2860EF2905967C00E42F66 /* UtilityViews.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilityViews.swift; sourceTree = "<group>"; };
+		0D2D139729A1673A007EDC70 /* PhotoGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGalleryView.swift; sourceTree = "<group>"; };
+		0D623D0629A12D0F00FE515D /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		0DC97462295CE51500358A45 /* PaletteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteEditorView.swift; sourceTree = "<group>"; usesTabs = 0; };
+		0DCF855329A021CA0090B8C2 /* AletMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AletMessage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +67,8 @@
 				0D285D152958580F0075B6FB /* PaletteChooserView.swift */,
 				0DC97462295CE51500358A45 /* PaletteEditorView.swift */,
 				0D16DA0329648B2100F575BB /* PaletteManager.swift */,
+				0D623D0629A12D0F00FE515D /* CameraView.swift */,
+				0D2D139729A1673A007EDC70 /* PhotoGalleryView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -109,6 +117,7 @@
 				0D2860E529058A2800E42F66 /* EmojiArtModel.swift */,
 				0D2860E72905931100E42F66 /* EmojiArtModel.Background.swift */,
 				0D26E851293BBB6900EDE968 /* Palette.swift */,
+				0DCF855329A021CA0090B8C2 /* AletMessage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -205,8 +214,11 @@
 				0D2860F02905967C00E42F66 /* UtilityViews.swift in Sources */,
 				0D2860D92905801200E42F66 /* EmojiArtDocumentView.swift in Sources */,
 				0D285D162958580F0075B6FB /* PaletteChooserView.swift in Sources */,
+				0D623D0729A12D0F00FE515D /* CameraView.swift in Sources */,
 				0D2860D72905801200E42F66 /* EmojiArtApp.swift in Sources */,
 				0D2860EE2905966200E42F66 /* UtilityExtensions.swift in Sources */,
+				0D2D139829A1673A007EDC70 /* PhotoGalleryView.swift in Sources */,
+				0DCF855429A021CA0090B8C2 /* AletMessage.swift in Sources */,
 				0D16DA0429648B2100F575BB /* PaletteManager.swift in Sources */,
 				0D26E854293BBC1900EDE968 /* PaletteStore.swift in Sources */,
 				0D2860EB2905941600E42F66 /* EmojiArtDocument.swift in Sources */,
@@ -346,6 +358,7 @@
 				DEVELOPMENT_TEAM = 3S3M2US2NF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo for EmojiArt document background.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -375,6 +388,7 @@
 				DEVELOPMENT_TEAM = 3S3M2US2NF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take a photo for EmojiArt document background.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

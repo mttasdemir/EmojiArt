@@ -9,14 +9,15 @@ import SwiftUI
 
 struct EmojiArtDocumentView: View {
     @ObservedObject var document: EmojiArtDocument
-    let defaultEmojiSize: CGFloat = 50
+    let defaultEmojiSize: CGFloat = 30
     @State private var selectedEmojis: Set<Emoji> = []
     
     @State private var isDownloadFailed: Bool = false
     @State private var downloadUrl: URL?
+    @State private var alertMessage: AlertMessage = AlertMessage(isPresented: false, title: "", messate: "")
     
     var body: some View {
-        VStack {
+        NavigationStack {
             documentBody
             PaletteChooserView(defaultEmojiSize: defaultEmojiSize)
         }
@@ -67,6 +68,13 @@ struct EmojiArtDocumentView: View {
             .onReceive(document.$backgroundImage) { image in
                scalingFactor = zoomToScale(image, geometry.size)
             }
+            .compactableToolbar(toolbarContent)
+            .sheet(item: $imagePicker) {picker in
+                switch picker {
+                case .camera: CameraView(handler: imagePickerHandler)
+                case .photolibrary: PhotoGalleryView(handler: imagePickerHandler)
+                }
+            }
             .alert("Download Error", isPresented: $isDownloadFailed, presenting: downloadUrl) { _ in
                 Button("OK") {
                     isDownloadFailed = false
@@ -74,8 +82,62 @@ struct EmojiArtDocumentView: View {
             } message: {url in
                 Text("Error while downloading from \(url)")
             }
+            .alert(alertMessage.title, isPresented: $alertMessage.isPresented, presenting: alertMessage.messate) {_ in
+                Button("OK") {
+                    alertMessage.isPresented = false
+                }
+            } message: {message in
+                Text(message)
+            }
         }
     }
+    
+    private func imagePickerHandler(_ image: UIImage?) {
+        if let imageData = image?.jpegData(compressionQuality: 1.0) {
+            document.setBackground(imageData)
+        }
+        imagePicker = nil
+    }
+    
+    @State private var imagePicker: ImagePicker?
+    
+    enum ImagePicker: Identifiable {
+        case camera
+        case photolibrary
+        var id: ImagePicker { self }
+    }
+    
+    @ViewBuilder var toolbarContent: some View {
+        Button {
+            pasteBackground()
+        } label: { Label("Paste", systemImage: "doc.on.clipboard") }
+        if CameraView.isAvailable {
+            Button {
+                imagePicker = .camera
+            } label: { Image(systemName: "camera.circle.fill") }
+        }
+        Button {
+            imagePicker = .photolibrary
+        } label: { Image(systemName: "photo.circle.fill") }
+        Button {
+        } label: { Label("Undo", systemImage: "arrow.uturn.left.circle.fill") }
+        Button {
+        } label: { Label("Redo", systemImage: "arrow.uturn.right.circle.fill") }
+    }
+    
+    private func pasteBackground() {
+        if let data = UIPasteboard.general.image?.jpegData(compressionQuality: 1.0) {
+            document.setBackground(data)
+        } else if let data = UIPasteboard.general.image?.pngData() {
+            document.setBackground(data)
+        } else if let url = UIPasteboard.general.url?.imageURL {
+            document.setBackground(url)
+        } else {
+            alertMessage = AlertMessage(isPresented: true, title: "Copy-Paste Error", messate: "Data is not an url or an image")
+        }
+    }
+    
+
     
     private func isEmojiSelected(_ emoji: Emoji) -> Bool {
         selectedEmojis.contains(where: {$0.id == emoji.id}) 
